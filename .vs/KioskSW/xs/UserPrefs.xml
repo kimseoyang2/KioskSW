@@ -1,0 +1,31 @@
+﻿<Properties StartupConfiguration="{C155E5CE-D79C-6D0F-8958-0F8628E9ADF7}|">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/03. Scripts/www_Req.cs">
+    <Files>
+      <File FileName="Assets/03. Scripts/www_Req.cs" Line="33" Column="23" />
+      <File FileName="Assets/03. Scripts/SceneManager.cs" Line="19" Column="39" />
+      <File FileName="Assets/03. Scripts/GetButtonName.cs" Line="161" Column="13" />
+      <File FileName="Assets/03. Scripts/GetDecide.cs" Line="1" Column="1" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="KioskSW" expanded="True">
+            <Node name="Assets" expanded="True">
+              <Node name="03. Scripts" expanded="True">
+                <Node name="www_Req.cs" selected="True" />
+              </Node>
+              <Node name="Scripts" expanded="True" />
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.ItemProperties.Assembly-CSharp PreferredExecutionTarget="c8067fbc-4ed6-42ff-a974-373b1bf0c381" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MultiItemStartupConfigurations />
+</Properties>
