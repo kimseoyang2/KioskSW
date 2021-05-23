@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en"></html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Sketch</title>
+
+    <link rel="stylesheet" type="text/html" href="https://github.com/syeminpark/test/blob/master/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.3.1/p5.js"></script>
+    <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
+  </head>
+
+<body>
+    <script>
+
+// 변수 선언
+let video;
+let poseNet;
+let poses = [];
+leftPos = [];
+rightPos = [];
+let counter = 0;
+let start=true;
+let state=0;
+let limit=10; // 기준 파라미터
+let currentMillis;
+let prev=0;
+let interval=5000;
+let sent;
+
+let textOut; //파이썬으로 보내는 값
+let textInput ;//파이썬으로부터 받는 값.
+let unityInput ;//유니티로부터 받는 값.
+
+var isSame;
+
+
+function setup() {
+ init();
+ isSame=true;
+
+
+}
+
+function draw() {
+
+  //카메라를 좌우반전한다
+  flip();
+  //파이썬 코드를 5초마다 확인. textInput 변수에 파이썬 값을 저장
+  getMessage();
+     //파이썬 신호와 대체. 위에 받은 textInput변수에 따라서 start가 사실인지 거짓인지 판단한다
+     //현재는 프레임 수가 500개가 지나가면 false가 되게금 만들었다. 테스트를 위해서.
+  startCode();
+
+
+  //대기상태
+  if (state==0){
+      counter=0;
+    }
+  // textInput 변수에 의해서 start가 true가 되면
+    if(state==1){
+    //빨간 원 그려주는 함수 실행
+    drawKeypoints();
+    //움직임량 탐지 함수 실행.
+    gotPoses(poses);
+    //기준점(limit) 이상이라서 움직임 많은지,아니면 이하라서 움직임 적은지 판단하는 함수 실행
+    decide();
+  }
+  //질문 영역에서 벗어나면. 즉 start==false이면.
+    else if(state==2){
+      //값을 한번만 보내기 위한 조건문.
+
+
+  //위 decide함수에서 결정한 textOut 변수 값을 보낸다.
+      sendMessage();
+      state=0;
+      }
+  }
+
+
+///////////////////////////////////////////////////////이 4개 함수만 보면 됨///////////////////
+
+function checkState(){
+    unityInput=textInput[textInput.length-1];
+    //if(unityInput==)
+
+}
+//questionNum 변수에 의해 코드가 시작되고 끝난다.
+function startCode(){
+     if(frameCount>500){
+       start=false;
+       print("sent")
+
+   }
+  //대체할 논리식
+//   if(textInput=1){
+//       start=true;
+//   }
+//   else{
+//       start=false;
+//       textInputm=0;
+//   }
+}
+
+//파이썬으로 변수 textOut을 보낸다.
+function sendMessage(){
+  fetch('/test', {
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    method: 'POST',
+    body: JSON.stringify({
+      //여기서 내보냄
+        "greeting": textOut,
+
+    })
+}).then(function (response) {
+    return response.text();
+}).then(function (text) {
+    console.log('POST response: ');
+    console.log(text);
+});
+}
+
+
+
+//파이썬으로부터 입력받아  textInput  변수에 저장한다.
+function getMessage(){
+  currentMillis=millis()
+if(currentMillis-prev>interval){
+    prev=currentMillis;
+      fetch('/test')
+      .then(function (response) {
+          return response.json();
+      }).then(function (text) {
+        //여기서 파이썬 값을 저장.
+          textInput= text.fromPython
+          print("received")
+          //console.log(textInput);
+          // Python이 "POST"하는 배열에서 마지막 값 변수에 저장한다. (
+
+
+
+            if(unityInput == Number(Object.values(textInput[textInput.length-1]))){
+              console.log("PASS!")
+            }
+            else {
+              unityInput=Object.values(textInput[textInput.length-1])
+              state=(Number(unityInput));
+              console.log(Number(unityInput));
+              console.log(Object.values(textInput[textInput.length-1]))
+              console.log("Saved")
+              //**타입확인용
+              //console.log(typeof(unityInput));
+              //console.log(typeof(Object.values(textInput[textInput.length-1])));
+
+            }
+
+
+              //unityInput=Object.values(textInput[textInput.length-1])
+
+
+
+
+
+
+
+
+
+
+          // 각 반환 값은 javascript의 object형태
+          //typeof(unityInput);
+
+
+          //if(Object.keys(unityInput)="state_FromUnity")
+          //{
+            //print("Unity")
+          //}
+          //else{
+            //print("p5js")
+          //}
+
+
+
+
+
+      });
+    }
+}
+
+
+
+//기준점 이상인지 이하인지 판단하는 함수. 최종적으로 파이썬에게 textOut 값을 보낸다.
+function decide(){
+  if(counter>limit){
+    textOut="OVER"
+
+  }
+  else{
+    textOut="UNDER"
+    
+  }
+}
+
+
+//////////////////////////////////////////////////////이하는 볼 필요 없음//////////////////////
+
+
+
+//poseNet의 모든 결과값이 들어있는 배열 poses를 필요에 맞게 사용하는 함수
+function gotPoses(poses) {
+  //자바 오브젝트 내부로 들어감
+  for (let i = 0; i < poses.length; i += 1) {
+    const pose = poses[i].pose;
+
+    //100개의 프레임이 지나지 않았으면, 즉  그냥 웜업 타임임. 99번째프레임 부터 비교하기 시작
+      if (frameCount < 100) {
+        //오른쪽과 왼쪽 눈의 x 위치값을 배열의 첫번째 요소에 저장함
+        leftPos[0] = pose.rightEye.x
+        rightPos[0] = pose.leftEye.x
+      }
+      //100프레임 이후부터 비교하기 시작한다. 99번째 프레임에서 받은 눈들의 위치값이랑.
+      if (frameCount > 100) {
+        //배열의 두번째 요소들에 지속적으로 새로운 위치값들을 저장한다.
+        leftPos[1] = pose.rightEye.x
+        rightPos[1] = pose.leftEye.x
+        //confidence= 명확도. 모델이 제대로 굴러가고 있고 이것을 눈이라고 인식하면
+        if (pose.leftEye.confidence > 0.95 || pose.rightEye.confidence > 0.95) {
+          //처음 위치값보다 현재 각 눈의 위치값이 + - 50 이동하면 움직인 걸로 친다.
+          if (leftPos[1] - 50 > leftPos[0] || leftPos[1] + 50 < leftPos[0] && rightPos[1] - 50 > rightPos[0] || rightPos[1] + 50 < rightPos[0]) {
+            //카운터를 증가시킨다.
+            counter++;
+            print("counter= ", counter);
+            //다시 프레임 수를 0으로 만들어 if (frameCount < 100) 코드로 돌려보낸다. 웜업 타임
+            frameCount = 0;
+          }
+        }
+      }
+    }
+  }
+
+//동그라미 빨강색을 그리는 함수
+function drawKeypoints() {
+  for (let i = 0; i < poses.length; i += 1) {
+    const pose = poses[i].pose;
+    for (let j = 0; j < 5; j += 1) {
+      const keypoint = pose.keypoints[j];
+      if (keypoint.score > 0.2) {
+        fill(255, 0, 0);
+        noStroke();
+        022
+        ellipse(keypoint.position.x, keypoint.position.y, 10, 10);
+      }
+    }
+  }
+}
+function init(){
+   //캔버스를 만든다.
+   createCanvas(640, 480);
+  //비디오를 시작한다.
+  video = createCapture(VIDEO);
+  //비디오의 사이즈를 바꾼다.
+  video.size(width*1.5, height*1.5);
+   //1명 탐지할 수 있는 포즈넷을 실행시킨다.
+  poseNet = ml5.poseNet(video, "single",modelReady);
+   //모델 준비되면 값들을 poses배열에 저장한다.
+  poseNet.on("pose", function (results) {
+  poses = results;
+  });
+  video.hide();
+}
+
+
+//화면 좌우반전한다
+function flip(){
+    translate(width, 0);
+  scale(-1, 1);
+  image(video, 0, 0, width*1.5, height*1.5);
+}
+
+//poseNet 모델 로딩 되었으면 로드가 되었다고 뜬다.
+function modelReady() {
+  select("#status").html("Model Loaded");
+}
+
+
+
+
+    </script>
+    </body>
+    </html>
